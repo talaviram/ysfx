@@ -64,7 +64,7 @@ function(add_new_target target_name is_synth)
         JUCE_DESCRIPTION "Host for JSFX plugins"
         COMPANY_NAME "Jean Pierre Cimalando / Joep Vanlier"
         BUNDLE_ID "Jean_Pierre_Cimalando__Joep_Vanlier"
-        FORMATS VST3 AU
+        FORMATS VST3 AU Standalone
         NEEDS_MIDI_INPUT TRUE
         NEEDS_MIDI_OUTPUT TRUE
         NEEDS_CURL FALSE
@@ -127,7 +127,9 @@ function(add_new_target target_name is_synth)
     PRIVATE
         ysfx::ysfx
         json
+        juce::juce_audio_devices
         juce::juce_audio_processors
+        juce::juce_audio_utils
         juce::juce_gui_basics
         juce::juce_gui_extra
         juce::juce_opengl
