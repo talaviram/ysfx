@@ -18,9 +18,12 @@
 #include "parameter.h"
 #include <cmath>
 
+// JUCE needs explicit version for AU hinting
+constexpr auto kParamVersion = 1;
+
 YsfxParameter::YsfxParameter(ysfx_t *fx, int sliderIndex)
     : RangedAudioParameter(
-        "slider" + juce::String(sliderIndex + 1),
+        {"slider" + juce::String(sliderIndex + 1), kParamVersion},
         "Slider " + juce::String(sliderIndex + 1)),
       m_sliderIndex(sliderIndex), m_displayName("Slider " + juce::String(sliderIndex + 1))
 {
