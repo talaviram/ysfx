@@ -16,12 +16,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# ysfx-private
-#    A ysfx target which gives access to the internals.
-#    This target is adequate for unit-testing.
+# ysfx
 # ------------------------------------------------------------------------------
-add_library(ysfx-private
-    OBJECT
+add_library(ysfx
+    STATIC
         "sources/ysfx.cpp"
         "sources/ysfx.hpp"
         "sources/ysfx_config.cpp"
@@ -60,34 +58,34 @@ add_library(ysfx-private
         "sources/ysfx_preprocess.hpp"
         "sources/utility/sync_bitset.hpp"
         "sources/base64/Base64.hpp")
-target_compile_definitions(ysfx-private
+target_compile_definitions(ysfx
     PRIVATE
         "_FILE_OFFSET_BITS=64")
 if(MSVC)
-    target_compile_definitions(ysfx-private
+    target_compile_definitions(ysfx
         PRIVATE
             "_CRT_NONSTDC_NO_WARNINGS")
 endif()
 if(WIN32)
-    target_compile_definitions(ysfx-private
+    target_compile_definitions(ysfx
         PRIVATE
             "NOMINMAX")
 endif()
 if(NOT YSFX_FTS_IS_AVAILABLE)
-    target_compile_definitions(ysfx-private
+    target_compile_definitions(ysfx
         PRIVATE
             "YSFX_NO_FTS")
 endif()
 if(YSFX_FTS_IS_AVAILABLE AND NOT YSFX_FTS_HAS_LFS_SUPPORT)
-    target_compile_definitions(ysfx-private
+    target_compile_definitions(ysfx
         PRIVATE
             "YSFX_FTS_LACKS_LFS_SUPPORT")
 endif()
-target_include_directories(ysfx-private
+target_include_directories(ysfx
     PUBLIC
         "include"
         "sources")
-target_link_libraries(ysfx-private
+target_link_libraries(ysfx
     PUBLIC
         eel2
         eel2nasm
@@ -95,56 +93,10 @@ target_link_libraries(ysfx-private
         dr_libs)
 
 if(YSFX_GFX)
-    target_link_libraries(ysfx-private PUBLIC lice)
-else()
-    target_compile_definitions(ysfx-private PUBLIC "YSFX_NO_GFX")
-endif()
-
-# ysfx::ysfx
-#    A ysfx target which gives access to the public interface.
-#    This target is adequate for normal use.
-# ------------------------------------------------------------------------------
-add_library(ysfx STATIC)
-target_include_directories(ysfx PUBLIC "include")
-target_link_libraries(ysfx PRIVATE
-    ysfx-private
-    eel2
-    eel2nasm
-    wdl-base)
-if(YSFX_GFX)
     target_link_libraries(ysfx PUBLIC lice)
+else()
+    target_compile_definitions(ysfx PUBLIC "YSFX_NO_GFX")
 endif()
-add_library(ysfx::ysfx ALIAS ysfx)
 
 set_property(TARGET ysfx PROPERTY PUBLIC_HEADER "include/ysfx.h")
-
-# generate the function export list
-add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/exports/ysfx.txt"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/cmake/ExtractYsfxExports.cmake"
-    DEPENDS "${PROJECT_SOURCE_DIR}/cmake/ExtractYsfxExports.cmake"
-    DEPENDS "include/ysfx.h"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    VERBATIM)
-add_custom_target(ysfx-api DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/exports/ysfx.txt")
-add_dependencies(ysfx ysfx-api)
-
-# strip the static library, to keep API symbols only (on supported platforms)
-if(YSFX_DEEP_STRIP)
-    # TODO currently broken, don't use
-    if(NOT APPLE AND NOT WIN32)
-        if(OBJCOPY_PROGRAM AND RANLIB_PROGRAM)
-            add_custom_command(
-                TARGET ysfx POST_BUILD
-                COMMAND "${OBJCOPY_PROGRAM}" "--keep-symbols=${CMAKE_CURRENT_SOURCE_DIR}/exports/ysfx.txt" "--strip-all" "$<TARGET_FILE:ysfx>"
-                COMMAND "${RANLIB_PROGRAM}" "$<TARGET_FILE:ysfx>"
-                VERBATIM)
-        endif()
-    endif()
-endif()
-
-# install
-install(
-    TARGETS ysfx
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+add_library(ysfx::ysfx ALIAS ysfx)
